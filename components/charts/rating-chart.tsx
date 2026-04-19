@@ -20,8 +20,7 @@ export const RatingChart = ({
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Ratings</h1>
       </div>
-      <div className="w-full h-[300px]">
-      <ResponsiveContainer width={"100%"} height={"100%"}>
+      <ResponsiveContainer width={"100%"} height={300}>
         <PieChart>
           <Pie
             dataKey={"value"}
@@ -31,11 +30,11 @@ export const RatingChart = ({
             cx={"50%"}
             cy={"50%"}
             innerRadius={70}
+            outerRadius={100}
             fill="#8884d8"
           />
         </PieChart>
       </ResponsiveContainer>
-      </div>
 
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
         <h1 className="text-2xl font-bold">{averageRating?.toFixed(1)}</h1>
