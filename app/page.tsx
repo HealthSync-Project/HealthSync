@@ -19,15 +19,14 @@ export default async function Home() {
           <h1 className="text-4xl md:text-5xl font-bold text-center">
             Welcome to <br />
             <span className="text-blue-700 text-5xl md:text-6xl">
-              Kinda HMS
+              HealthSync
             </span>
           </h1>
         </div>
 
         <div className="text-center max-w-xl flex flex-col items-center justify-center">
           <p className="mb-8">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Esse maxime
-            quae numquam possimus dolor. Illum, ipsam laudantium. Reprehenderit
+            Connecting Patients, Doctors, and Care - Seamlessly
           </p>
 
           <div className="flex gap-4">
@@ -61,7 +60,7 @@ export default async function Home() {
       </div>
       <footer className="mt-8">
         <p className="text-center text-sm">
-          &copy; 2024 Kinda Hospital Management System. All rights reserved.
+          &copy; 2026 HealthSync. All rights reserved.
         </p>
       </footer>
     </div>
