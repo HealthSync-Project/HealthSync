@@ -36,37 +36,59 @@ export async function createNewStaff(data: any) {
     }
 
     const validatedValues = values.data;
-
     const client = await clerkClient();
 
-    const user = await client.users.createUser({
-      emailAddress: [validatedValues.email],
-      password: validatedValues.password,
-      firstName: validatedValues.name.split(" ")[0],
-      lastName: validatedValues.name.split(" ")[1],
-      publicMetadata: { role: "doctor" },
-    });
+    let user;
+
+    try {
+      const nameParts = validatedValues.name.split(" ");
+      user = await client.users.createUser({
+        emailAddress: [validatedValues.email],
+        password: validatedValues.password,
+        firstName: nameParts[0],
+        lastName: nameParts[1] || nameParts[0],
+        publicMetadata: { role: "nurse" },
+      });
+    } catch (clerkError: any) {
+      const emailTaken = clerkError?.errors?.find(
+        (e: any) => e.code === "form_identifier_exists"
+      );
+      if (emailTaken) {
+        return {
+          success: false,
+          error: true,
+          message: "This email is already registered. Please use a different email.",
+        };
+      }
+      throw clerkError;
+    }
 
     delete validatedValues["password"];
 
-    const doctor = await db.staff.create({
-      data: {
-        name: validatedValues.name,
-        phone: validatedValues.phone,
-        email: validatedValues.email,
-        address: validatedValues.address,
-        role: validatedValues.role,
-        license_number: validatedValues.license_number,
-        department: validatedValues.department,
-        colorCode: generateRandomColor(),
-        id: user.id,
-        status: "ACTIVE",
-      },
-    });
+    try {
+      const doctor = await db.staff.create({
+        data: {
+          name: validatedValues.name,
+          phone: validatedValues.phone,
+          email: validatedValues.email,
+          address: validatedValues.address,
+          role: validatedValues.role,
+          license_number: validatedValues.license_number,
+          department: validatedValues.department,
+          colorCode: generateRandomColor(),
+          id: user.id,
+          status: "ACTIVE",
+        },
+      });
+    } catch (dbError: any) {
+      console.log("DB ERROR:", dbError.message);
+      await client.users.deleteUser(user.id);
+      throw dbError;
+    }
 
     return {
       success: true,
-      message: "Doctor added successfully",
+      message: "Staff added successfully",
       error: false,
     };
   } catch (error) {
@@ -74,10 +96,10 @@ export async function createNewStaff(data: any) {
     return { error: true, success: false, message: "Something went wrong" };
   }
 }
+
 export async function createNewDoctor(data: any) {
   try {
     const values = DoctorSchema.safeParse(data);
-
     const workingDaysValues = WorkingDaysSchema.safeParse(data?.work_schedule);
 
     if (!values.success || !workingDaysValues.success) {
@@ -93,30 +115,53 @@ export async function createNewDoctor(data: any) {
 
     const client = await clerkClient();
 
-    const user = await client.users.createUser({
-      emailAddress: [validatedValues.email],
-      password: validatedValues.password,
-      firstName: validatedValues.name.split(" ")[0],
-      lastName: validatedValues.name.split(" ")[1],
-      publicMetadata: { role: "doctor" },
-    });
+    let user;
+
+    try {
+      const nameParts = validatedValues.name.split(" ");
+      user = await client.users.createUser({
+        emailAddress: [validatedValues.email],
+        password: validatedValues.password,
+        firstName: nameParts[0],
+        lastName: nameParts[1] || nameParts[0],
+        publicMetadata: { role: "doctor" },
+      });
+    } catch (clerkError: any) {
+      const emailTaken = clerkError?.errors?.find(
+        (e: any) => e.code === "form_identifier_exists"
+      );
+      if (emailTaken) {
+        return {
+          success: false,
+          error: true,
+          message: "This email is already registered. Please use a different email.",
+        };
+      }
+      throw clerkError;
+    }
 
     delete validatedValues["password"];
 
-    const doctor = await db.doctor.create({
-      data: {
-        ...validatedValues,
-        id: user.id,
-      },
-    });
+    try {
+      const doctor = await db.doctor.create({
+        data: {
+          ...validatedValues,
+          id: user.id,
+        },
+      });
 
-    await Promise.all(
-      workingDayData?.map((el) =>
-        db.workingDays.create({
-          data: { ...el, doctor_id: doctor.id },
-        })
-      )
-    );
+      await Promise.all(
+        workingDayData?.map((el) =>
+          db.workingDays.create({
+            data: { ...el, doctor_id: doctor.id },
+          })
+        )
+      );
+    } catch (dbError: any) {
+      console.log("DB ERROR:", dbError.message);
+      await client.users.deleteUser(user.id);
+      throw dbError;
+    }
 
     return {
       success: true,
@@ -132,7 +177,6 @@ export async function createNewDoctor(data: any) {
 export async function addNewService(data: any) {
   try {
     const isValidData = ServicesSchema.safeParse(data);
-
     const validatedData = isValidData.data;
 
     await db.services.create({

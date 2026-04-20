@@ -68,8 +68,7 @@ const RenderInput = ({ field, props }: { field: any; props: InputProps }) => {
         <div className="items-top flex space-x-2">
           <Checkbox
             id={props.name}
-            checked={field.value}
-            onCheckedChange={(e) => field.onChange(!!e)}
+            onCheckedChange={(e) => field.onChange(e === true || null)}
           />
           <div className="grid gap-1.5 leading-none">
             <label
