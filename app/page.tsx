@@ -26,7 +26,8 @@ export default async function Home() {
 
         <div className="text-center max-w-xl flex flex-col items-center justify-center">
           <p className="mb-8">
-            Connecting Patients, Doctors, and Care - Seamlessly
+            Your all-in-one platform for smarter hospital management. 
+            Effortlessly handle patients, doctors, appointments, and more.
           </p>
 
           <div className="flex gap-4">

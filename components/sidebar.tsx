@@ -171,7 +171,7 @@ export const Sidebar = async () => {
             href={"/"}
             className="hidden lg:flex text-base 2xl:text-xl font-bold"
           >
-            Kinda HMS
+            HealthSync
           </Link>
         </div>
 
