@@ -5,7 +5,7 @@ import { generateTimes } from "@/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Doctor, Patient } from "@/lib/generated/prisma/client";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // ✅ ADDED useEffect
 import { SubmitHandler, useForm } from "react-hook-form";
 import {
   Sheet,
@@ -49,23 +49,33 @@ const TYPES = [
 export const BookAppointment = ({
   data,
   doctors,
+  defaultDoctorId, // ✅ ADDED
 }: {
   data: Patient;
   doctors: Doctor[];
+  defaultDoctorId?: string; // ✅ ADDED
 }) => {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false); // ✅ ADDED controlled sheet state
   const router = useRouter();
   const [physicians, setPhysicians] = useState<Doctor[] | undefined>(doctors);
 
   const appointmentTimes = generateTimes(8, 17, 30);
-
   const patientName = `${data?.first_name} ${data?.last_name}`;
+
+  // ✅ ADDED — auto-open sheet and pre-select doctor when coming from Mira
+  useEffect(() => {
+    if (defaultDoctorId) {
+      setOpen(true);
+      form.setValue("doctor_id", defaultDoctorId);
+    }
+  }, [defaultDoctorId]);
 
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
     defaultValues: {
-      doctor_id: "",
+      doctor_id: defaultDoctorId || "", // ✅ CHANGED — pre-select doctor
       appointment_date: "",
       time: "",
       type: "",
@@ -79,7 +89,6 @@ export const BookAppointment = ({
     try {
       setIsSubmitting(true);
       const newData = { ...values, patient_id: data?.id! };
-
       const res = await createNewAppointment(newData);
 
       if (res.success) {
@@ -96,7 +105,7 @@ export const BookAppointment = ({
   };
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}> {/* ✅ CHANGED — controlled */}
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -129,7 +138,6 @@ export const BookAppointment = ({
                     className="size-16 border border-input"
                     bgColor={data?.colorCode!}
                   />
-
                   <div>
                     <p className="font-semibold text-lg">{patientName}</p>
                     <span className="text-sm text-gray-500 capitalize">
@@ -155,7 +163,7 @@ export const BookAppointment = ({
                       <FormLabel>Physician</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} // ✅ CHANGED — value instead of defaultValue so pre-selection works
                         disabled={isSubmitting}
                       >
                         <FormControl>
@@ -163,7 +171,7 @@ export const BookAppointment = ({
                             <SelectValue placeholder="Select a physician" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="">
+                        <SelectContent>
                           {physicians?.map((i, id) => (
                             <SelectItem key={id} value={i.id} className="p-2">
                               <div className="flex flex-row gap-2 p-2">
@@ -174,7 +182,7 @@ export const BookAppointment = ({
                                   textClassName="text-black"
                                 />
                                 <div>
-                                  <p className="font-medium text-start ">
+                                  <p className="font-medium text-start">
                                     {i.name}
                                   </p>
                                   <span className="text-sm text-gray-600">

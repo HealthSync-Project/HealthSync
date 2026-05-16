@@ -6,41 +6,61 @@ import { usePathname } from "next/navigation";
 import React from "react";
 
 export const Navbar = () => {
-  const user = useAuth();
+  const { userId } = useAuth();
+  const pathname = usePathname();
 
   function formatPathName(): string {
-    const pathname = usePathname();
-
     if (!pathname) return "Overview";
 
-    const splitRoute = pathname.split("/");
-    const lastIndex = splitRoute.length - 1 > 2 ? 2 : splitRoute.length - 1;
+    const splitRoute = pathname.split("/").filter(Boolean);
 
-    const pathName = splitRoute[lastIndex];
+    const page =
+      splitRoute.length > 1
+        ? splitRoute[1]
+        : splitRoute[0] || "overview";
 
-    const formattedPath = pathName.replace(/-/g, " ");
-
-    return formattedPath;
+    return page.replace(/-/g, " ");
   }
 
   const path = formatPathName();
 
   return (
-    <div className="p-5 flex justify-between bg-white">
-      <h1 className="text-xl font-medium text-gray-500 capitalize">
-        {path || "Overview"}
-      </h1>
+    <header className="h-20 px-6 lg:px-8 flex items-center justify-between">
 
+      {/* LEFT */}
+      <div>
+
+        <p className="text-sm text-slate-500 mb-1">
+          HealthSync
+        </p>
+
+        <h1 className="text-3xl font-black tracking-tight text-slate-900 capitalize leading-none">
+          {path}
+        </h1>
+
+      </div>
+
+      {/* RIGHT */}
       <div className="flex items-center gap-4">
-        <div className="relative">
-          <Bell />
-          <p className="absolute -top-3 right-1 size-4 bg-red-600 text-white rounded-full text-[10px] text-center">
-            2
-          </p>
+
+        {/* NOTIFICATIONS */}
+        <button className="relative h-12 w-12 rounded-2xl border border-white/60 bg-white/60 backdrop-blur-xl flex items-center justify-center shadow-sm transition-all hover:bg-white/80">
+
+          <Bell size={19} className="text-slate-700" />
+
+          <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500" />
+
+        </button>
+
+        {/* USER */}
+        <div className="flex items-center justify-center rounded-2xl border border-white/60 bg-white/60 backdrop-blur-xl p-1 shadow-sm">
+
+          {userId && <UserButton />}
+
         </div>
 
-        {user?.userId && <UserButton />}
       </div>
-    </div>
+
+    </header>
   );
 };

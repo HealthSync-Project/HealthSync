@@ -15,44 +15,24 @@ import React from "react";
 import { Pagination } from "@/components/pagination";
 import { AppointmentContainer } from "@/components/appointment-container";
 import { Roles } from "@/types/globals";
+
 const columns = [
-  {
-    header: "Info",
-    key: "name",
-  },
-  {
-    header: "Date",
-    key: "appointment_date",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Time",
-    key: "time",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Doctor",
-    key: "doctor",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Status",
-    key: "status",
-    className: "hidden xl:table-cell",
-  },
-  {
-    header: "Actions",
-    key: "action",
-  },
+  { header: "Info", key: "name" },
+  { header: "Date", key: "appointment_date", className: "hidden md:table-cell" },
+  { header: "Time", key: "time", className: "hidden md:table-cell" },
+  { header: "Doctor", key: "doctor", className: "hidden md:table-cell" },
+  { header: "Status", key: "status", className: "hidden xl:table-cell" },
+  { header: "Actions", key: "action" },
 ];
 
 interface DataProps extends Appointment {
   patient: Patient;
   doctor: Doctor;
 }
+
 const Appointments = async (props: {
   searchParams?: Promise<{ [key: string]: string | undefined }>;
-  }) => {
+}) => {
   const searchParams = await props.searchParams;
   const userRole = await getRole();
   const { userId } = await auth();
@@ -61,6 +41,7 @@ const Appointments = async (props: {
   const page = (searchParams?.p || "1") as string;
   const searchQuery = searchParams?.q || "";
   const id = searchParams?.id || undefined;
+  const doctorId = searchParams?.doctor || undefined; // ✅ ADDED — read doctor param from Mira Book button
 
   let queryId = undefined;
 
@@ -112,15 +93,14 @@ const Appointments = async (props: {
         </td>
         <td className="hidden md:table-cell">{item.time}</td>
 
-        <td className="hidden  items-center py-2  md:table-cell">
-          <div className="flex items-center  gap-2 md:gap-4">
+        <td className="hidden items-center py-2 md:table-cell">
+          <div className="flex items-center gap-2 md:gap-4">
             <ProfileImage
               url={item.doctor?.img!}
               name={item.doctor?.name}
               bgColor={item?.doctor?.colorCode!}
               textClassName="text-black"
             />
-
             <div>
               <h3 className="font-semibold uppercase">{item.doctor?.name}</h3>
               <span className="text-xs md:text-sm capitalize">
@@ -163,7 +143,13 @@ const Appointments = async (props: {
         <div className="w-full lg:w-fit flex items-center justify-between lg:justify-start gap-2">
           <SearchInput />
 
-          {isPatient && <AppointmentContainer id={userId!} />}
+          {/* ✅ CHANGED — pass defaultDoctorId so sheet auto-opens with doctor pre-selected */}
+          {isPatient && (
+            <AppointmentContainer
+              id={userId!}
+              defaultDoctorId={doctorId}
+            />
+          )}
         </div>
       </div>
 

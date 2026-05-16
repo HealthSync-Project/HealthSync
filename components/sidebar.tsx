@@ -14,8 +14,10 @@ import {
   Users,
   UsersRound,
 } from "lucide-react";
+
 import Link from "next/link";
 import React from "react";
+
 import { getRole } from "@/utils/roles";
 import { LogoutButton } from "./logout-button";
 
@@ -28,7 +30,7 @@ const ACCESS_LEVELS_ALL = [
 ];
 
 const SidebarIcon = ({ icon: Icon }: { icon: LucideIcon }) => {
-  return <Icon className="size-6 lg:size-5" />;
+  return <Icon className="size-5" />;
 };
 
 export const Sidebar = async () => {
@@ -53,7 +55,7 @@ export const Sidebar = async () => {
       ],
     },
     {
-      label: "Manage",
+      label: "MANAGEMENT",
       links: [
         {
           name: "Users",
@@ -136,7 +138,7 @@ export const Sidebar = async () => {
       ],
     },
     {
-      label: "System",
+      label: "SYSTEM",
       links: [
         {
           name: "Notifications",
@@ -161,47 +163,104 @@ export const Sidebar = async () => {
   ];
 
   return (
-    <div className="w-full p-4 flex flex-col justify-between gap-4 bg-white overflow-y-scroll min-h-full">
-      <div className="">
-        <div className="flex items-center justify-center lg:justify-start gap-2">
-          <div className="p-1.5 rounded-md bg-blue-600 text-white">
-            <SquareActivity size={22} />
+    <aside className="flex h-screen flex-col justify-between overflow-y-auto border-r border-white/40 bg-white/55 backdrop-blur-2xl px-4 py-6">
+
+      {/* TOP */}
+      <div>
+
+        {/* BRANDING */}
+        <div className="mb-12 flex items-center gap-4 px-2">
+
+          {/* LOGO */}
+          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-900 text-white shadow-[0_10px_30px_rgba(15,23,42,0.25)]">
+
+            <span className="text-2xl font-black tracking-tight">
+              H
+            </span>
+
           </div>
-          <Link
-            href={"/"}
-            className="hidden lg:flex text-base 2xl:text-xl font-bold"
-          >
-            HealthSync
-          </Link>
+
+          {/* TEXT */}
+          <div className="hidden lg:block">
+
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">
+              HealthSync
+            </h1>
+
+            <p className="mt-0.5 text-sm capitalize text-slate-500">
+              {role}
+            </p>
+
+          </div>
+
         </div>
 
-        <div className="mt-4 text-sm">
-          {SIDEBAR_LINKS.map((el) => (
-            <div key={el.label} className="flex flex-col gap-2">
-              <span className="hidden uppercase lg:block text-gray-400 font-bold my-4">
-                {el.label}
-              </span>
+        {/* NAVIGATION */}
+        <div className="space-y-8">
 
-              {el.links.map((link) => {
-                if (link.access.includes(role.toLowerCase())) {
-                  return (
-                    <Link
-                      href={link.href}
-                      className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-blue-600/10"
-                      key={link.name}
-                    >
-                      <SidebarIcon icon={link.icon} />
-                      <span className="hidden lg:block">{link.name}</span>
-                    </Link>
-                  );
-                }
-              })}
+          {SIDEBAR_LINKS.map((section) => (
+            <div key={section.label}>
+
+              {/* LABEL */}
+              <p className="mb-3 hidden px-3 text-xs font-bold uppercase tracking-[0.24em] text-slate-400 lg:block">
+
+                {section.label}
+
+              </p>
+
+              {/* LINKS */}
+              <div className="space-y-1.5">
+
+                {section.links.map((link) => {
+                  if (link.access.includes(role.toLowerCase())) {
+                    return (
+                      <Link
+                        key={link.name}
+                        href={link.href}
+                        className="
+                          group flex items-center justify-center lg:justify-start
+                          gap-3 rounded-2xl px-3 py-3
+                          text-slate-600 transition-all duration-200
+                          hover:bg-white hover:text-slate-900
+                          hover:shadow-[0_4px_20px_rgba(15,23,42,0.06)]
+                        "
+                      >
+
+                        {/* ICON */}
+                        <div className="flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors">
+
+                          <SidebarIcon icon={link.icon} />
+
+                        </div>
+
+                        {/* TEXT */}
+                        <span className="hidden text-sm font-medium lg:block">
+
+                          {link.name}
+
+                        </span>
+
+                      </Link>
+                    );
+                  }
+                })}
+
+              </div>
+
             </div>
           ))}
+
         </div>
+
       </div>
 
-      <LogoutButton />
-    </div>
+      {/* BOTTOM */}
+      <div className="mt-8 border-t border-white/40 pt-6">
+
+        <LogoutButton />
+
+      </div>
+
+    </aside>
   );
 };

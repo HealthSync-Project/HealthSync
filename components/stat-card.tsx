@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
-import React from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
-import { Button } from "./ui/button";
-import Link from "next/link";
 import { formatNumber } from "@/utils";
+
+import Link from "next/link";
+import React from "react";
+
+import { LucideIcon } from "lucide-react";
 
 interface CardProps {
   title: string;
@@ -17,8 +17,9 @@ interface CardProps {
 }
 
 const CardIcon = ({ icon: Icon }: { icon: LucideIcon }) => {
-  return <Icon />;
+  return <Icon className="size-5" />;
 };
+
 export const StatCard = ({
   title,
   icon,
@@ -29,39 +30,61 @@ export const StatCard = ({
   link,
 }: CardProps) => {
   return (
-    <Card className={cn("w-full md:w-[330px] 2xl:w-[250px]", className)}>
-      <CardHeader className="flex flex-row items-center justify-between py-3 capitalize">
-        <h3>{title}</h3>
-        <Button
-          asChild
-          size="sm"
-          variant="outline"
-          className="font-normal text-xs bg-transparent p-2 h-0 hover:underline"
-        >
-          <Link href={link}>See details</Link>
-        </Button>
-      </CardHeader>
+    <Link
+      href={link}
+      className={cn(
+        `
+        group relative overflow-hidden
+        rounded-3xl border border-white/40
+        bg-white/70 backdrop-blur-xl
+        p-5
+        shadow-[0_8px_30px_rgba(15,23,42,0.06)]
+        transition-all duration-300
+        hover:-translate-y-1
+        hover:shadow-[0_12px_40px_rgba(15,23,42,0.10)]
+        `,
+        className
+      )}
+    >
+      {/* SOFT GLOW */}
+      <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-blue-500/5 blur-3xl" />
 
-      <CardContent>
-        <div className="flex items-center gap-4">
-          <div
-            className={cn(
-              "w-10 h-10 bg-violet-50-500/15 rounded-full flex items-center justify-center text-violet-600",
-              iconClassName
-            )}
-          >
-            <CardIcon icon={icon} />
-          </div>
+      {/* CONTENT */}
+      <div className="relative z-10 flex items-center justify-between gap-5">
 
-          <h2 className="text-2xl 2xl:text-3xl font-semibold">
+        {/* LEFT SIDE */}
+        <div className="flex flex-col">
+
+          <p className="text-base font-semibold text-slate-600">
+            {title}
+          </p>
+
+          <h2 className="mt-1 text-3xl font-black tracking-tight text-slate-900">
             {formatNumber(value)}
           </h2>
-        </div>
-      </CardContent>
 
-      <CardFooter className="pb-3">
-        <p className="text-sm text-gray-500">{note}</p>
-      </CardFooter>
-    </Card>
+          <p className="mt-1 text-[15px] text-slate-400">
+            {note}
+          </p>
+
+        </div>
+
+        {/* ICON */}
+        <div
+          className={cn(
+            `
+            flex h-14 w-14 shrink-0 items-center justify-center
+            rounded-2xl
+            bg-slate-900 text-white
+            shadow-lg
+            `,
+            iconClassName
+          )}
+        >
+          <CardIcon icon={icon} />
+        </div>
+
+      </div>
+    </Link>
   );
 };
