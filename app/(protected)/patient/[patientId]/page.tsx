@@ -52,6 +52,16 @@ const PatientProfile = async (props: ParamsProps) => {
             </h1>
             <span className="text-sm text-gray-500">{data?.email}</span>
 
+            {/* ADD THIS QUICK LINK UNDER EMAIL */}
+            {patientId === "self" && (
+              <Link
+              className="mt-2 text-sm text-blue-600 hover:underline"
+              href={`/patient/registration`}
+              >
+                Edit Information
+              </Link>
+            )}
+
             <div className="w-full flex items-center justify-center gap-2 mt-4">
               <div className="w-1/2 space-y-1 text-center">
                 <p className="text-xl font-medium">{data?.totalAppointments}</p>
@@ -100,13 +110,13 @@ const PatientProfile = async (props: ParamsProps) => {
           </Card>
         </div>
 
-        <div className="mt-10">
+       {/* <div className="mt-10">
           {cat === "medical-history" && (
             <MedicalHistoryContainer patientId={id} />
           )}
 
-          {/* {cat === "payments" && <Payments patientId={id!} />} */}
-        </div>
+          {/* {cat === "payments" && <Payments patientId={id!} />} 
+        </div>*/}
       </div>
 
       <div className="w-full xl:w-1/3">
@@ -139,14 +149,18 @@ const PatientProfile = async (props: ParamsProps) => {
             <Link className="p-3 rounded-md bg-rose-100" href={`#`}>
               Lab Test & Result
             </Link>
-            {patientId === "self" && (
+            
+            {/*Delete this for adding quick link under email*/}
+
+           {/* {patientId === "self" && (
               <Link
                 className="p-3 rounded-md bg-black/10"
                 href={`/patient/registration`}
               >
                 Edit Information
               </Link>
-            )}
+            )}*/}
+            
           </div>
         </div>
 

@@ -3,9 +3,9 @@
 import { AppointmentSchema } from "@/lib/schema";
 import { generateTimes } from "@/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Doctor, Patient } from "@/lib/generated/prisma/client";
+import { Doctor, Patient, WorkingDays } from "@/lib/generated/prisma/client"; // CHANGE 1: added WorkingDays
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react"; // ✅ ADDED useEffect
+import React, { useState, useEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import {
   Sheet,
@@ -46,25 +46,30 @@ const TYPES = [
   { label: "ANT", value: "ANT" },
 ];
 
+// CHANGE 2: Day mapping and extended Doctor type
+const DAY_MAP: Record<string, number> = {
+  sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+  thursday: 4, friday: 5, saturday: 6,
+};
+type DoctorWithWorkingDays = Doctor & { working_days: WorkingDays[] };
+
 export const BookAppointment = ({
   data,
   doctors,
-  defaultDoctorId, // ✅ ADDED
+  defaultDoctorId,
 }: {
   data: Patient;
-  doctors: Doctor[];
-  defaultDoctorId?: string; // ✅ ADDED
+  doctors: DoctorWithWorkingDays[]; // CHANGE 3: updated type
+  defaultDoctorId?: string;
 }) => {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [open, setOpen] = useState(false); // ✅ ADDED controlled sheet state
+  const [open, setOpen] = useState(false);
   const router = useRouter();
-  const [physicians, setPhysicians] = useState<Doctor[] | undefined>(doctors);
+  const [physicians, setPhysicians] = useState<DoctorWithWorkingDays[]>(doctors); // CHANGE 4: updated type
 
-  const appointmentTimes = generateTimes(8, 17, 30);
   const patientName = `${data?.first_name} ${data?.last_name}`;
 
-  // ✅ ADDED — auto-open sheet and pre-select doctor when coming from Mira
   useEffect(() => {
     if (defaultDoctorId) {
       setOpen(true);
@@ -75,7 +80,7 @@ export const BookAppointment = ({
   const form = useForm<z.infer<typeof AppointmentSchema>>({
     resolver: zodResolver(AppointmentSchema),
     defaultValues: {
-      doctor_id: defaultDoctorId || "", // ✅ CHANGED — pre-select doctor
+      doctor_id: defaultDoctorId || "",
       appointment_date: "",
       time: "",
       type: "",
@@ -83,9 +88,35 @@ export const BookAppointment = ({
     },
   });
 
-  const onSubmit: SubmitHandler<z.infer<typeof AppointmentSchema>> = async (
-    values
-  ) => {
+  // CHANGE 5: Watch doctor and date to compute available times and validate days
+  const selectedDoctorId = form.watch("doctor_id");
+  const selectedDoctor = physicians.find((d) => d.id === selectedDoctorId);
+  const workingDays = selectedDoctor?.working_days || [];
+  const availableDayIndices = workingDays.map((wd) => DAY_MAP[wd.day.toLowerCase()]);
+
+  const isDateDisabled = (dateStr: string) => {
+    if (!dateStr || !selectedDoctor) return false;
+    return !availableDayIndices.includes(new Date(dateStr).getDay());
+  };
+
+  const selectedDate = form.watch("appointment_date");
+  const getAvailableTimes = () => {
+    if (!selectedDate || !selectedDoctor) return generateTimes(8, 17, 30);
+    const dayName = Object.keys(DAY_MAP).find(
+      (key) => DAY_MAP[key] === new Date(selectedDate).getDay()
+    );
+    const workingDay = workingDays.find((wd) => wd.day.toLowerCase() === dayName);
+    if (!workingDay) return [];
+    const parseHour = (t: string) => new Date(`1970-01-01 ${t}`).getHours();
+    return generateTimes(
+      parseHour(workingDay.start_time),
+      parseHour(workingDay.close_time),
+      30
+    );
+  };
+  const availableTimes = getAvailableTimes(); // CHANGE 6: filtered times
+
+  const onSubmit: SubmitHandler<z.infer<typeof AppointmentSchema>> = async (values) => {
     try {
       setIsSubmitting(true);
       const newData = { ...values, patient_id: data?.id! };
@@ -105,7 +136,7 @@ export const BookAppointment = ({
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}> {/* ✅ CHANGED — controlled */}
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -162,8 +193,13 @@ export const BookAppointment = ({
                     <FormItem>
                       <FormLabel>Physician</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
-                        value={field.value} // ✅ CHANGED — value instead of defaultValue so pre-selection works
+                        // CHANGE 7: Reset date and time when doctor changes
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          form.setValue("appointment_date", "");
+                          form.setValue("time", "");
+                        }}
+                        value={field.value}
                         disabled={isSubmitting}
                       >
                         <FormControl>
@@ -200,21 +236,54 @@ export const BookAppointment = ({
                 />
 
                 <div className="flex items-center gap-2">
-                  <CustomInput
-                    type="input"
+                  {/* CHANGE 8: Replaced CustomInput date with FormField for availability feedback */}
+                  <FormField
                     control={form.control}
                     name="appointment_date"
-                    placeholder=""
-                    label="Date"
-                    inputType="date"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>Date</FormLabel>
+                        <FormControl>
+                          <input
+                            type="date"
+                            min={new Date().toISOString().split("T")[0]}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.setValue("time", "");
+                            }}
+                            style={{
+                              opacity:
+                                selectedDoctor && isDateDisabled(field.value)
+                                  ? 0.4
+                                  : 1,
+                            }}
+                          />
+                        </FormControl>
+                        {selectedDoctor && workingDays.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Available: {workingDays.map((wd) => wd.day).join(", ")}
+                          </p>
+                        )}
+                        {selectedDoctor && isDateDisabled(field.value) && field.value && (
+                          <p className="text-xs text-red-500 mt-1">
+                            Doctor is not available on this day.
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
+
+                  {/* CHANGE 9: Use filtered availableTimes */}
                   <CustomInput
                     type="select"
                     control={form.control}
                     name="time"
                     placeholder="Select time"
                     label="Time"
-                    selectList={appointmentTimes}
+                    selectList={availableTimes}
                   />
                 </div>
 

@@ -5,7 +5,9 @@ import { processAppointments } from "./patient";
 
 export async function getDoctors() {
   try {
-    const data = await db.doctor.findMany();
+    const data = await db.doctor.findMany({
+      include: { working_days: true }, // CHANGE: include working days
+    });
 
     return { success: true, data, status: 200 };
   } catch (error) {
