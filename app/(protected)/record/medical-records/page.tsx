@@ -1,50 +1,28 @@
+// FILE: app/(protected)/record/medical-records/page.tsx
+// REPLACE your existing file entirely — adds role-based filtering + fixed ViewAction href
+
 import { ViewAction } from "@/components/action-options";
 import { Pagination } from "@/components/pagination";
 import { ProfileImage } from "@/components/profile-image";
 import SearchInput from "@/components/search-input";
 import { Table } from "@/components/tables/table";
 import { SearchParamsProps } from "@/types";
-import { checkRole } from "@/utils/roles";
+import { getRole } from "@/utils/roles";
 import { DATA_LIMIT } from "@/utils/seetings";
 import { getMedicalRecords } from "@/utils/services/medical-record";
 import { Diagnosis, LabTest, MedicalRecords, Patient } from "@/lib/generated/prisma/client";
 import { format } from "date-fns";
 import { BriefcaseBusiness } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
 
 const columns = [
-  {
-    header: "No",
-    key: "no",
-  },
-  {
-    header: "Info",
-    key: "name",
-  },
-  {
-    header: "Date & Time",
-    key: "medical_date",
-    className: "hidden md:table-cell",
-  },
-  {
-    header: "Doctor",
-    key: "doctor",
-    className: "hidden 2xl:table-cell",
-  },
-  {
-    header: "Diagnosis",
-    key: "diagnosis",
-    className: "hidden lg:table-cell",
-  },
-  {
-    header: "Lab Test",
-    key: "lab_test",
-    className: "hidden 2xl:table-cell",
-  },
-  {
-    header: "Action",
-    key: "action",
-    className: "",
-  },
+  { header: "No", key: "no" },
+  { header: "Info", key: "name" },
+  { header: "Date & Time", key: "medical_date", className: "hidden md:table-cell" },
+  { header: "Doctor", key: "doctor", className: "hidden 2xl:table-cell" },
+  { header: "Diagnosis", key: "diagnosis", className: "hidden lg:table-cell" },
+  { header: "Lab Test", key: "lab_test", className: "hidden 2xl:table-cell" },
+  { header: "Action", key: "action" },
 ];
 
 interface ExtendedProps extends MedicalRecords {
@@ -58,12 +36,15 @@ const MedicalRecordsPage = async (props: SearchParamsProps) => {
   const page = (searchParams?.p || "1") as string;
   const searchQuery = (searchParams?.q || "") as string;
 
-  const { data, totalPages, totalRecords, currentPage } =
-    await getMedicalRecords({
-      page,
-      search: searchQuery,
-    });
-  const isAdmin = await checkRole("admin");
+  const { userId } = await auth();
+  const role = await getRole();
+
+  const { data, totalPages, totalRecords, currentPage } = await getMedicalRecords({
+    page,
+    search: searchQuery,
+    userId: userId!,
+    role,
+  });
 
   if (!data) return null;
 
@@ -76,6 +57,10 @@ const MedicalRecordsPage = async (props: SearchParamsProps) => {
         key={item?.id}
         className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-slate-50"
       >
+        {/* NO */}
+        <td className="px-4 py-2 text-gray-500">#{item?.id}</td>
+
+        {/* INFO */}
         <td className="flex items-center gap-4 p-4">
           <ProfileImage
             url={item?.patient?.img!}
@@ -88,18 +73,27 @@ const MedicalRecordsPage = async (props: SearchParamsProps) => {
             <span className="text-sm capitalize">{patient?.gender}</span>
           </div>
         </td>
-        <td className="hidden md:table-cell">
-          {format(item?.created_at, "yyyy-MM-dd HH:mm:ss")}
+
+        {/* DATE & TIME */}
+        <td className="hidden md:table-cell px-4 py-2">
+          <p>{format(item?.created_at, "MMM dd, yyyy")}</p>
+          <p className="text-xs text-gray-400">{format(item?.created_at, "hh:mm a")}</p>
         </td>
-        <td className="hidden 2xl:table-cell">{item?.doctor_id}</td>
-        <td className="hidden lg:table-cell">
+
+        {/* DOCTOR */}
+        <td className="hidden 2xl:table-cell px-4 py-2 text-xs text-gray-500 max-w-[160px] truncate">{item?.doctor_id}</td>
+
+        {/* DIAGNOSIS */}
+        <td className="hidden lg:table-cell px-4 py-2">
           {item?.diagnosis?.length === 0 ? (
             <span className="text-gray-400 italic">No diagnosis found</span>
           ) : (
             <span>{item?.diagnosis.length}</span>
           )}
         </td>
-        <td className="hidden xl:table-cell">
+
+        {/* LAB TEST */}
+        <td className="hidden xl:table-cell px-4 py-2">
           {item?.lab_test?.length === 0 ? (
             <span className="text-gray-400 italic">No lab found</span>
           ) : (
@@ -107,8 +101,9 @@ const MedicalRecordsPage = async (props: SearchParamsProps) => {
           )}
         </td>
 
-        <td>
-          <ViewAction href={`/appointments/${item?.appointment_id}`} />
+        {/* ACTION */}
+        <td className="px-4 py-2">
+          <ViewAction href={`/record/appointments/${item?.appointment_id}`} />
         </td>
       </tr>
     );
@@ -119,20 +114,15 @@ const MedicalRecordsPage = async (props: SearchParamsProps) => {
       <div className="flex items-center justify-between">
         <div className="hidden lg:flex items-center gap-1">
           <BriefcaseBusiness size={20} className="text-gray-500" />
-
           <p className="text-2xl font-semibold">{totalRecords}</p>
-          <span className="text-gray-600 text-sm xl:text-base">
-            total records
-          </span>
+          <span className="text-gray-600 text-sm xl:text-base">total records</span>
         </div>
         <div className="w-full lg:w-fit flex items-center justify-between lg:justify-start gap-2">
           <SearchInput />
         </div>
       </div>
-
       <div className="mt-4">
         <Table columns={columns} data={data} renderRow={renderRow} />
-
         <Pagination
           totalPages={totalPages}
           currentPage={currentPage}
