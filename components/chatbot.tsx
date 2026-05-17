@@ -51,6 +51,7 @@ const quickPrompts = [
 
 const greetingMessages = ["Hi", "Hello", "Hey", "Good to see you"];
 
+// Specialist names — only for detecting from Mira's reply
 const SPECIALIST_KEYWORDS: Record<string, string> = {
   cardiologist: "cardiologist",
   neurologist: "neurologist",
@@ -73,12 +74,103 @@ const SPECIALIST_KEYWORDS: Record<string, string> = {
   "ent specialist": "ent",
 };
 
-function detectSpecialist(text: string): string | null {
+// Body part / condition → specialization for user booking messages
+const BODY_PART_MAP: Record<string, string> = {
+  heart: "cardiologist",
+  cardiac: "cardiologist",
+  chest: "cardiologist",
+  eye: "ophthalmologist",
+  eyes: "ophthalmologist",
+  vision: "ophthalmologist",
+  sight: "ophthalmologist",
+  brain: "neurologist",
+  neuro: "neurologist",
+  memory: "neurologist",
+  seizure: "neurologist",
+  stomach: "gastroenterologist",
+  gut: "gastroenterologist",
+  digestion: "gastroenterologist",
+  bowel: "gastroenterologist",
+  liver: "gastroenterologist",
+  skin: "dermatologist",
+  rash: "dermatologist",
+  acne: "dermatologist",
+  bone: "orthopedic",
+  joint: "orthopedic",
+  knee: "orthopedic",
+  spine: "orthopedic",
+  fracture: "orthopedic",
+  mind: "psychiatrist",
+  mental: "psychiatrist",
+  anxiety: "psychiatrist",
+  depression: "psychiatrist",
+  lung: "pulmonologist",
+  lungs: "pulmonologist",
+  breathing: "pulmonologist",
+  respiratory: "pulmonologist",
+  asthma: "pulmonologist",
+  kidney: "nephrologist",
+  renal: "nephrologist",
+  diabetes: "endocrinologist",
+  thyroid: "endocrinologist",
+  hormones: "endocrinologist",
+  pregnancy: "obstetrician/gynecologist",
+  periods: "obstetrician/gynecologist",
+  gynec: "obstetrician/gynecologist",
+  ear: "ent specialist",
+  nose: "ent specialist",
+  throat: "ent specialist",
+  sinus: "ent specialist",
+  cancer: "oncologist",
+  tumor: "oncologist",
+  checkup: "general physician",
+  routine: "general physician",
+};
+
+// Detect specialist from Mira's reply
+function detectSpecialistFromReply(text: string): string | null {
   const lower = text.toLowerCase();
   for (const [keyword, specialization] of Object.entries(SPECIALIST_KEYWORDS)) {
     if (lower.includes(keyword)) return specialization;
   }
   return null;
+}
+
+// Detect specialist from user's booking message
+function detectSpecialistFromUser(text: string): string | null {
+  const lower = text.toLowerCase();
+  // Check direct specialist names first
+  for (const [keyword, specialization] of Object.entries(SPECIALIST_KEYWORDS)) {
+    if (lower.includes(keyword)) return specialization;
+  }
+  // Then body parts
+  for (const [keyword, specialization] of Object.entries(BODY_PART_MAP)) {
+    if (lower.includes(keyword)) return specialization;
+  }
+  return null;
+}
+
+// Detect doctor name from user message
+function detectDoctorName(text: string): string | null {
+  const drMatch = text.match(/dr\.?\s+([a-zA-Z]+)/i);
+  if (drMatch) return drMatch[1];
+  const withMatch = text.match(/(?:book with|see|consult)\s+([a-zA-Z]+)/i);
+  if (
+    withMatch &&
+    !["a", "an", "the", "doctor", "specialist"].includes(
+      withMatch[1].toLowerCase()
+    )
+  ) {
+    return withMatch[1];
+  }
+  return null;
+}
+
+// Detect booking intent from user message
+function isBookingIntent(text: string): boolean {
+  return /\b(book|appointment|schedule|i want to see|can i see|i need a doctor|see a doctor|want a doctor|consult a)\b/i.test(
+    text
+  );
 }
 
 function renderContent(text: string) {
@@ -134,12 +226,15 @@ export default function Mira({ patientData }: ChatbotProps) {
     };
   }, [loading]);
 
-  async function fetchDoctors(specialization: string): Promise<DoctorCard[]> {
+  async function fetchDoctors(
+    specialization?: string,
+    name?: string
+  ): Promise<DoctorCard[]> {
     try {
       const res = await fetch("/api/doctors/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ specialization }),
+        body: JSON.stringify({ specialization, name }),
       });
       const data = await res.json();
       return data.doctors || [];
@@ -183,12 +278,30 @@ export default function Mira({ patientData }: ChatbotProps) {
       const data = await response.json();
       const replyText = data.reply;
 
-      const specialist = detectSpecialist(replyText);
-      const isRecommendation =
-        /recommend|specialist|see a|consult|visit/i.test(replyText);
       let doctors: DoctorCard[] = [];
-      if (specialist && isRecommendation) {
-        doctors = await fetchDoctors(specialist);
+
+      // Priority 1 — doctor name search
+      const doctorName = detectDoctorName(finalMessage);
+      if (doctorName) {
+        doctors = await fetchDoctors(undefined, doctorName);
+      }
+      // Priority 2 — booking intent from user message
+      else if (isBookingIntent(finalMessage)) {
+        const specialist = detectSpecialistFromUser(finalMessage);
+        if (specialist) {
+          doctors = await fetchDoctors(specialist);
+        }
+      }
+      // Priority 3 — symptom flow, detect from Mira's reply
+      else {
+        const specialist = detectSpecialistFromReply(replyText);
+        const isRecommendation =
+          /recommend|specialist|see a|consult|visit|found|available|book/i.test(
+            replyText
+          );
+        if (specialist && isRecommendation) {
+          doctors = await fetchDoctors(specialist);
+        }
       }
 
       setMessages((prev) => [

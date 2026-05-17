@@ -2,23 +2,16 @@ import { db } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { specialization } = await req.json();
+    const { specialization, name } = await req.json();
 
-    if (!specialization) {
-      return Response.json(
-        { doctors: [] },
-        { status: 200 }
-      );
+    if (!specialization && !name) {
+      return Response.json({ doctors: [] }, { status: 200 });
     }
 
     const doctors = await db.doctor.findMany({
-      where: {
-        specialization: {
-          contains: specialization,
-          mode: "insensitive",
-        },
-      },
-
+      where: name
+        ? { name: { contains: name, mode: "insensitive" } }
+        : { specialization: { contains: specialization, mode: "insensitive" } },
       select: {
         id: true,
         name: true,
@@ -28,18 +21,12 @@ export async function POST(req: Request) {
         department: true,
         type: true,
       },
-
       take: 3,
     });
 
     return Response.json({ doctors });
-
   } catch (error) {
     console.error(error);
-
-    return Response.json(
-      { doctors: [] },
-      { status: 500 }
-    );
+    return Response.json({ doctors: [] }, { status: 500 });
   }
 }
