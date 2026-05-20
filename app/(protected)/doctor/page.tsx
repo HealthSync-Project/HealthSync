@@ -1,23 +1,28 @@
+// FILE: app/(protected)/doctor/page.tsx
+// REPLACE existing file
+
 import { AvailableDoctors } from "@/components/available-doctor";
 import { AppointmentChart } from "@/components/charts/appointment-chart";
 import { StatSummary } from "@/components/charts/stat-summary";
 import { StatCard } from "@/components/stat-card";
 import { RecentAppointments } from "@/components/tables/recent-appointment";
 import { Button } from "@/components/ui/button";
-import { checkRole, getRole } from "@/utils/roles";
 import { getDoctorDashboardStats } from "@/utils/services/doctor";
 import { currentUser } from "@clerk/nextjs/server";
-import { BriefcaseBusiness, BriefcaseMedical, User, Users } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  BriefcaseMedical,
+  CalendarCheck,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import React from "react";
 
 const DoctorDashboard = async () => {
   const user = await currentUser();
-
   const {
-    totalPatient,
-    totalNurses,
+    totalMyPatients,
+    todayAppointments,
     totalAppointment,
     appointmentCounts,
     availableDoctors,
@@ -27,39 +32,39 @@ const DoctorDashboard = async () => {
 
   const cardData = [
     {
-      title: "Patients",
-      value: totalPatient,
+      title: "My Patients",
+      value: totalMyPatients,
       icon: Users,
       className: "bg-blue-600/15",
       iconClassName: "bg-blue-600/25 text-blue-600",
-      note: "Total patients",
+      note: "Unique patients seen",
       link: "/record/patients",
     },
     {
-      title: "Nurses",
-      value: totalNurses,
-      icon: User,
+      title: "Today",
+      value: todayAppointments,
+      icon: CalendarCheck,
       className: "bg-rose-600/15",
       iconClassName: "bg-rose-600/25 text-rose-600",
-      note: "Total nurses",
-      link: "",
+      note: "Appointments today",
+      link: "/record/appointments",
     },
     {
-      title: "Appointments",
+      title: "Total Appointments",
       value: totalAppointment,
       icon: BriefcaseBusiness,
       className: "bg-yellow-600/15",
       iconClassName: "bg-yellow-600/25 text-yellow-600",
-      note: "Total appointments",
+      note: "All time",
       link: "/record/appointments",
     },
     {
-      title: "Consultation",
+      title: "Completed",
       value: appointmentCounts?.COMPLETED,
       icon: BriefcaseMedical,
       className: "bg-emerald-600/15",
       iconClassName: "bg-emerald-600/25 text-emerald-600",
-      note: "Total consultation",
+      note: "Consultations done",
       link: "/record/appointments",
     },
   ];
@@ -70,14 +75,23 @@ const DoctorDashboard = async () => {
       <div className="w-full xl:w-[69%]">
         <div className="bg-white rounded-xl p-4 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-lg xl:text-2xl font-semibold">
-              Welcome, Dr. {user?.firstName}
-            </h1>
+            <div>
+              <h1 className="text-lg xl:text-2xl font-semibold">
+                Welcome, Dr. {user?.firstName}
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                {new Date().toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
             <Button size="sm" variant="outline" asChild>
               <Link href={`/record/doctors/${user?.id}`}>View profile</Link>
             </Button>
           </div>
-
           <div className="w-full flex flex-wrap gap-2">
             {cardData?.map((el, index) => (
               <StatCard
@@ -94,6 +108,24 @@ const DoctorDashboard = async () => {
           </div>
         </div>
 
+        {/* Pending approvals — quick action for doctor */}
+        {(appointmentCounts?.PENDING ?? 0) > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-yellow-800">
+                {appointmentCounts?.PENDING} pending appointment
+                {appointmentCounts?.PENDING! > 1 ? "s" : ""} awaiting approval
+              </p>
+              <p className="text-sm text-yellow-600">
+                Review and approve scheduled appointments
+              </p>
+            </div>
+            <Button size="sm" asChild className="bg-yellow-500 hover:bg-yellow-600 text-white">
+              <Link href="/record/appointments">Review</Link>
+            </Button>
+          </div>
+        )}
+
         <div className="h-[500px]">
           <AppointmentChart data={monthlyData!} />
         </div>
@@ -108,7 +140,6 @@ const DoctorDashboard = async () => {
         <div className="w-full h-[450px] mb-8">
           <StatSummary data={appointmentCounts} total={totalAppointment!} />
         </div>
-
         <AvailableDoctors data={availableDoctors as any} />
       </div>
     </div>

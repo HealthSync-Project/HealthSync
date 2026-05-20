@@ -111,17 +111,18 @@ const Appointments = async (props: {
         </td>
 
         <td className="hidden xl:table-cell">
-          <AppointmentStatusIndicator status={item.status!} />
+          <AppointmentStatusIndicator status={item.status!} appointmentDate={item.appointment_date} />
         </td>
         <td>
           <div className="flex items-center gap-2">
             <ViewAppointment id={item?.id.toString()} />
-            <AppointmentActionOptions
+           <AppointmentActionOptions
               userId={userId!}
               patientId={item?.patient_id}
-              doctorId={item?.doctor_id}
-              status={item?.status}
-              appointmentId={item.id}
+             doctorId={item?.doctor_id}
+             status={item?.status}
+             appointmentId={item.id}
+             appointmentDate={item.appointment_date}
             />
           </div>
         </td>

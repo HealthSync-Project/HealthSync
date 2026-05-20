@@ -1,9 +1,11 @@
+// FILE: components/appointment-actions.tsx
+// REPLACE existing file — removed "View Full Details" button (redundant with View modal)
+
 import { checkRole } from "@/utils/roles";
 import { auth } from "@clerk/nextjs/server";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
-import { EllipsisVertical, User } from "lucide-react";
-import Link from "next/link";
+import { EllipsisVertical } from "lucide-react";
 import { AppointmentActionDialog } from "./appointment-action-dialog";
 
 interface ActionsProps {
@@ -12,6 +14,7 @@ interface ActionsProps {
   patientId: string;
   doctorId: string;
   appointmentId: number;
+  appointmentDate?: Date;
 }
 
 export const AppointmentActionOptions = async ({
@@ -20,9 +23,16 @@ export const AppointmentActionOptions = async ({
   doctorId,
   status,
   appointmentId,
+  appointmentDate,
 }: ActionsProps) => {
   const user = await auth();
   const isAdmin = await checkRole("admin");
+  const isPatient = await checkRole("patient");
+  const isOverdue = appointmentDate && new Date(appointmentDate) < new Date() &&
+    (status === "PENDING" || status === "SCHEDULED");
+
+  // No 3-dot menu for completed or overdue appointments
+  if (status === "COMPLETED" || status === "CANCELLED" || isOverdue) return null;
 
   return (
     <Popover>
@@ -34,36 +44,27 @@ export const AppointmentActionOptions = async ({
           <EllipsisVertical size={16} className="text-sm text-gray-500" />
         </Button>
       </PopoverTrigger>
-
       <PopoverContent className="w-56 p-3">
         <div className="space-y-3 flex flex-col items-start">
           <span className="text-gray-400 text-xs">Perform Actions</span>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="w-full justify-start"
-            asChild
-          >
-            <Link href={`appointments/${appointmentId}`}>
-              <User size={16} /> View Full Details
-            </Link>
-          </Button>
-
-          {status !== "SCHEDULED" && (
+          {isOverdue ? (
+            <span className="text-xs text-red-400 italic">No actions — overdue</span>
+          ) : null}
+          {!isOverdue && status !== "SCHEDULED" && !isPatient && (
             <AppointmentActionDialog
               type="approve"
               id={appointmentId}
               disabled={isAdmin || user.userId === doctorId}
             />
           )}
-          <AppointmentActionDialog
+          {!isOverdue && <AppointmentActionDialog
             type="cancel"
             id={appointmentId}
             disabled={
               status === "PENDING" &&
               (isAdmin || user.userId === doctorId || user.userId === patientId)
             }
-          />
+          />}
         </div>
       </PopoverContent>
     </Popover>

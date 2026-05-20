@@ -1,11 +1,21 @@
-import { Patient } from "@/lib/generated/prisma/client";
+// FILE: components/appointment/patient-details-card.tsx
+// REPLACE existing file
+
+import { Doctor, Patient } from "@/lib/generated/prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import Image from "next/image";
 import { calculateAge } from "@/utils";
 import { Calendar, Home, Info, Mail, Phone } from "lucide-react";
 import { format } from "date-fns";
+import { ProfileImage } from "../profile-image";
 
-export const PatientDetailsCard = ({ data }: { data: Patient }) => {
+export const PatientDetailsCard = ({
+  data,
+  doctor,
+}: {
+  data: Patient;
+  doctor?: Doctor | null;
+}) => {
   return (
     <Card className="shadow-none bg-white">
       <CardHeader>
@@ -35,7 +45,7 @@ export const PatientDetailsCard = ({ data }: { data: Patient }) => {
 
       <CardContent className="mt-4 space-y-4">
         <div className="flex items-start gap-3">
-          <Calendar size={22} className="text-0gray-400" />
+          <Calendar size={22} className="text-gray-400" />
           <div>
             <p className="text-sm text-gray-500">Date of Birth</p>
             <p className="text-base font-medium text-muted-foreground">
@@ -43,8 +53,9 @@ export const PatientDetailsCard = ({ data }: { data: Patient }) => {
             </p>
           </div>
         </div>
+
         <div className="flex items-start gap-3">
-          <Home size={22} className="text-0gray-400" />
+          <Home size={22} className="text-gray-400" />
           <div>
             <p className="text-sm text-gray-500">Address</p>
             <p className="text-base font-medium text-muted-foreground">
@@ -52,8 +63,9 @@ export const PatientDetailsCard = ({ data }: { data: Patient }) => {
             </p>
           </div>
         </div>
+
         <div className="flex items-start gap-3">
-          <Mail size={22} className="text-0gray-400" />
+          <Mail size={22} className="text-gray-400" />
           <div>
             <p className="text-sm text-gray-500">Email</p>
             <p className="text-base font-medium text-muted-foreground">
@@ -61,8 +73,9 @@ export const PatientDetailsCard = ({ data }: { data: Patient }) => {
             </p>
           </div>
         </div>
+
         <div className="flex items-start gap-3">
-          <Phone size={22} className="text-0gray-400" />
+          <Phone size={22} className="text-gray-400" />
           <div>
             <p className="text-sm text-gray-500">Phone</p>
             <p className="text-base font-medium text-muted-foreground">
@@ -70,31 +83,56 @@ export const PatientDetailsCard = ({ data }: { data: Patient }) => {
             </p>
           </div>
         </div>
+
+        {/* Physician — from DB, not hardcoded */}
         <div className="flex items-start gap-3">
-          <Info size={22} className="text-0gray-400" />
+          <Info size={22} className="text-gray-400" />
           <div>
             <p className="text-sm text-gray-500">Physician</p>
-            <p className="text-base font-medium text-muted-foreground">
-              Dr Codewave, MBBS, FCPS
-            </p>
+            {doctor ? (
+              <div className="flex items-center gap-2 mt-1">
+                <ProfileImage
+                  url={doctor.img!}
+                  name={doctor.name}
+                  bgColor={doctor.colorCode!}
+                  className="size-7 text-xs"
+                  textClassName="text-white"
+                />
+                <div>
+                  <p className="text-base font-medium text-muted-foreground">
+                    {doctor.name}
+                  </p>
+                  <p className="text-xs text-gray-400">{doctor.specialization}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-base font-medium text-muted-foreground">N/A</p>
+            )}
           </div>
         </div>
-        <div className="flex items-start gap-3">
+
+        <div>
+          <p className="text-sm text-gray-500">Active Conditions</p>
+          <p className="text-base font-medium text-muted-foreground">
+            {data?.medical_conditions || "None recorded"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">Allergies</p>
+          <p className="text-base font-medium text-muted-foreground">
+            {data?.allergies || "None recorded"}
+          </p>
+        </div>
+
+        {data?.blood_group && (
           <div>
-            <p className="text-sm text-gray-500">Active Conditions</p>
+            <p className="text-sm text-gray-500">Blood Group</p>
             <p className="text-base font-medium text-muted-foreground">
-              {data?.medical_conditions}
+              {data.blood_group}
             </p>
           </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <div>
-            <p className="text-sm text-gray-500">Allergies</p>
-            <p className="text-base font-medium text-muted-foreground">
-              {data?.allergies}
-            </p>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

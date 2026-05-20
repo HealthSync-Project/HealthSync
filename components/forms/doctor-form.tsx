@@ -1,9 +1,10 @@
+
 "use client";
 
 import { DoctorSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import React, { useActionState, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -70,16 +71,13 @@ export const DoctorForm = () => {
         toast.error("Please select work schedule");
         return;
       }
-
       setIsLoading(true);
       const resp = await createNewDoctor({
         ...values,
         work_schedule: workSchedule,
       });
-
       if (resp.success) {
         toast.success("Doctor added successfully!");
-
         setWorkSchedule([]);
         form.reset();
         router.refresh();
@@ -101,7 +99,6 @@ export const DoctorForm = () => {
       const department = SPECIALIZATION.find(
         (el) => el.value === selectedSpecialization
       );
-
       if (department) {
         form.setValue("department", department.department);
       }
@@ -117,110 +114,107 @@ export const DoctorForm = () => {
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="rounded-xl rounded-r-xl md:h-[90%] md:top-[5%] md:right-[1%] w-full overflow-y-scroll">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-xl overflow-y-auto px-6">
+        <SheetHeader className="mb-6">
           <SheetTitle>Add New Doctor</SheetTitle>
         </SheetHeader>
 
-        <div>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-8 mt-5 2xl:mt-10"
-            >
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
+            <CustomInput
+              type="radio"
+              selectList={TYPES}
+              control={form.control}
+              name="type"
+              label="Type"
+              placeholder=""
+              defaultValue="FULL"
+            />
+
+            <CustomInput
+              type="input"
+              control={form.control}
+              name="name"
+              placeholder="Doctor's name"
+              label="Full Name"
+            />
+
+            <div className="grid grid-cols-2 gap-4">
               <CustomInput
-                type="radio"
-                selectList={TYPES}
+                type="select"
                 control={form.control}
-                name="type"
-                label="Type"
-                placeholder=""
-                defaultValue="FULL"
+                name="specialization"
+                placeholder="Select specialization"
+                label="Specialization"
+                selectList={SPECIALIZATION}
               />
-
-              <CustomInput
-                type="input"
-                control={form.control}
-                name="name"
-                placeholder="Doctor's name"
-                label="Full Name"
-              />
-
-              <div className="flex items-center gap-2">
-                <CustomInput
-                  type="select"
-                  control={form.control}
-                  name="specialization"
-                  placeholder="Select specialization"
-                  label="Specialization"
-                  selectList={SPECIALIZATION}
-                />
-                <CustomInput
-                  type="input"
-                  control={form.control}
-                  name="department"
-                  placeholder="OPD"
-                  label="Department"
-                />
-              </div>
-
               <CustomInput
                 type="input"
                 control={form.control}
-                name="license_number"
-                placeholder="License Number"
-                label="License Number"
+                name="department"
+                placeholder="OPD"
+                label="Department"
               />
-              <div className="flex items-center gap-2">
-                <CustomInput
-                  type="input"
-                  control={form.control}
-                  name="email"
-                  placeholder="john@example.com"
-                  label="Email Address"
-                />
+            </div>
 
-                <CustomInput
-                  type="input"
-                  control={form.control}
-                  name="phone"
-                  placeholder="9225600735"
-                  label="Contact Number"
-                />
-              </div>
+            <CustomInput
+              type="input"
+              control={form.control}
+              name="license_number"
+              placeholder="License Number"
+              label="License Number"
+            />
 
+            <div className="grid grid-cols-2 gap-4">
               <CustomInput
                 type="input"
                 control={form.control}
-                name="address"
-                placeholder="1479 Street, Apt 1839-G, NY"
-                label="Address"
+                name="email"
+                placeholder="john@example.com"
+                label="Email Address"
               />
-
               <CustomInput
                 type="input"
                 control={form.control}
-                name="password"
-                placeholder=""
-                label="Password"
-                inputType="password"
+                name="phone"
+                placeholder="9225600735"
+                label="Contact Number"
               />
+            </div>
 
-              <div className="mt-6">
-                <Label>Working Days</Label>
+            <CustomInput
+              type="input"
+              control={form.control}
+              name="address"
+              placeholder="1479 Street, Apt 1839-G, NY"
+              label="Address"
+            />
 
-                <SwitchInput
-                  data={WORKING_DAYS}
-                  setWorkSchedule={setWorkSchedule}
-                />
-              </div>
+            <CustomInput
+              type="input"
+              control={form.control}
+              name="password"
+              placeholder=""
+              label="Password"
+              inputType="password"
+            />
 
-              <Button type="submit" disabled={isLoading} className="w-full">
-                Submit
-              </Button>
-            </form>
-          </Form>
-        </div>
+            <div>
+              <Label>Working Days</Label>
+              <SwitchInput
+                data={WORKING_DAYS}
+                setWorkSchedule={setWorkSchedule}
+              />
+            </div>
+
+            <Button type="submit" disabled={isLoading} className="w-full">
+              {isLoading ? "Saving..." : "Submit"}
+            </Button>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

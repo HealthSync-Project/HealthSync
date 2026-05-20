@@ -1,9 +1,11 @@
+// FILE: components/sidebar.tsx
+// REPLACE existing file — removed Administer Medications and Audit Logs
+
 import {
   Bell,
   LayoutDashboard,
   List,
   ListOrdered,
-  Logs,
   LucideIcon,
   Pill,
   Receipt,
@@ -100,18 +102,6 @@ export const Sidebar = async () => {
           icon: Receipt,
         },
         {
-          name: "Patient Management",
-          href: "/nurse/patient-management",
-          access: ["nurse"],
-          icon: Users,
-        },
-        {
-          name: "Administer Medications",
-          href: "/nurse/administer-medications",
-          access: ["admin", "doctor", "nurse"],
-          icon: Pill,
-        },
-        {
           name: "Appointments",
           href: "/record/appointments",
           access: ["patient"],
@@ -119,19 +109,19 @@ export const Sidebar = async () => {
         },
         {
           name: "Records",
-          href: "/patient/records",
+          href: "/record/medical-records",
           access: ["patient"],
           icon: List,
         },
         {
           name: "Prescription",
-          href: "#",
+          href: "/patient/prescription",
           access: ["patient"],
           icon: Pill,
         },
         {
           name: "Billing",
-          href: "/patient/billing",
+          href: "/record/billing",
           access: ["patient"],
           icon: Receipt,
         },
@@ -145,12 +135,6 @@ export const Sidebar = async () => {
           href: "/notifications",
           access: ACCESS_LEVELS_ALL,
           icon: Bell,
-        },
-        {
-          name: "Audit Logs",
-          href: "/admin/audit-logs",
-          access: ["admin"],
-          icon: Logs,
         },
         {
           name: "Settings",
@@ -173,44 +157,29 @@ export const Sidebar = async () => {
 
           {/* LOGO */}
           <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-900 text-white shadow-[0_10px_30px_rgba(15,23,42,0.25)]">
-
-            <span className="text-2xl font-black tracking-tight">
-              H
-            </span>
-
+            <span className="text-2xl font-black tracking-tight">H</span>
           </div>
 
           {/* TEXT */}
           <div className="hidden lg:block">
-
             <h1 className="text-2xl font-black tracking-tight text-slate-900">
               HealthSync
             </h1>
-
-            <p className="mt-0.5 text-sm capitalize text-slate-500">
-              {role}
-            </p>
-
+            <p className="mt-0.5 text-sm capitalize text-slate-500">{role}</p>
           </div>
 
         </div>
 
         {/* NAVIGATION */}
         <div className="space-y-8">
-
           {SIDEBAR_LINKS.map((section) => (
             <div key={section.label}>
 
-              {/* LABEL */}
               <p className="mb-3 hidden px-3 text-xs font-bold uppercase tracking-[0.24em] text-slate-400 lg:block">
-
                 {section.label}
-
               </p>
 
-              {/* LINKS */}
               <div className="space-y-1.5">
-
                 {section.links.map((link) => {
                   if (link.access.includes(role.toLowerCase())) {
                     return (
@@ -225,40 +194,27 @@ export const Sidebar = async () => {
                           hover:shadow-[0_4px_20px_rgba(15,23,42,0.06)]
                         "
                       >
-
-                        {/* ICON */}
                         <div className="flex items-center justify-center text-slate-500 group-hover:text-slate-900 transition-colors">
-
                           <SidebarIcon icon={link.icon} />
-
                         </div>
-
-                        {/* TEXT */}
                         <span className="hidden text-sm font-medium lg:block">
-
                           {link.name}
-
                         </span>
-
                       </Link>
                     );
                   }
                 })}
-
               </div>
 
             </div>
           ))}
-
         </div>
 
       </div>
 
       {/* BOTTOM */}
       <div className="mt-8 border-t border-white/40 pt-6">
-
         <LogoutButton />
-
       </div>
 
     </aside>

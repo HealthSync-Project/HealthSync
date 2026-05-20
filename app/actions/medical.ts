@@ -159,3 +159,44 @@ export async function generateBill(data: any) {
     return { success: false, msg: "Internal Server Error" };
   }
 }
+// ADD THIS to app/actions/medical.ts — paste at the bottom of the file
+
+export async function recordPayment(data: any) {
+  try {
+    const isAdmin = await checkRole("ADMIN");
+    if (!isAdmin) {
+      return { success: false, msg: "Only admins can record payments" };
+    }
+
+    const payment = await db.payment.findUnique({
+      where: { id: Number(data.payment_id) },
+    });
+
+    if (!payment) return { success: false, msg: "Payment record not found" };
+
+    const newAmountPaid = payment.amount_paid + Number(data.amount_paid);
+    const payable = payment.total_amount - payment.discount;
+
+    const newStatus =
+      newAmountPaid >= payable
+        ? "PAID"
+        : newAmountPaid > 0
+        ? "PART"
+        : "UNPAID";
+
+    await db.payment.update({
+      where: { id: Number(data.payment_id) },
+      data: {
+        amount_paid: newAmountPaid,
+        payment_method: data.payment_method,
+        payment_date: new Date(data.payment_date),
+        status: newStatus,
+      },
+    });
+
+    return { success: true, msg: "Payment recorded successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, msg: "Internal Server Error" };
+  }
+}

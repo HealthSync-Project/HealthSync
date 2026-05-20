@@ -153,7 +153,7 @@ export const ViewAppointment = async ({ id }: { id: string | undefined }) => {
                 <p className="w-fit bg-blue-100 text-blue-600 py-1 px-2 rounded text-xs md:text-sm mt-4">
                   Perform Action
                 </p>
-                <AppointmentAction id={data.id} status={data?.status} />
+                <AppointmentAction id={data.id} status={data?.status} appointmentDate={data?.appointment_date} />
               </>
             )}
           </div>

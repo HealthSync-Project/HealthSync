@@ -1,15 +1,18 @@
+// FILE: app/actions/appointment.ts
+// REPLACE existing file — adds status flow guards
+
 "use server";
 
 import { VitalSignsFormData } from "@/components/dialogs/add-vital-signs";
 import { db } from "@/lib/prisma";
 import { AppointmentSchema, VitalSignsSchema } from "@/lib/schema";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { AppointmentStatus } from "@/lib/generated/prisma/client";
+import { checkRole } from "@/utils/roles";
 
 export async function createNewAppointment(data: any) {
   try {
     const validatedData = AppointmentSchema.safeParse(data);
-
     if (!validatedData.success) {
       return { success: false, msg: "Invalid data" };
     }
@@ -26,28 +29,66 @@ export async function createNewAppointment(data: any) {
       },
     });
 
-    return {
-      success: true,
-      message: "Appointment booked successfully",
-    };
+    return { success: true, message: "Appointment booked successfully" };
   } catch (error) {
     console.log(error);
     return { success: false, msg: "Internal Server Error" };
   }
 }
+
 export async function appointmentAction(
   id: string | number,
-
   status: AppointmentStatus,
   reason: string
 ) {
   try {
+    const { userId } = await auth();
+    const isDoctor = await checkRole("doctor");
+
+    // Get current appointment
+    const current = await db.appointment.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!current) {
+      return { success: false, msg: "Appointment not found" };
+    }
+
+    // ✅ Status flow guard — no going backwards
+    const flow: AppointmentStatus[] = ["PENDING", "SCHEDULED", "COMPLETED", "CANCELLED"];
+    const currentIndex = flow.indexOf(current.status);
+    const newIndex = flow.indexOf(status);
+
+    // Allow CANCELLED from PENDING or SCHEDULED only
+    if (status === "CANCELLED") {
+      if (current.status === "COMPLETED") {
+        return { success: false, msg: "Cannot cancel a completed appointment" };
+      }
+      // ✅ Doctor cannot cancel a SCHEDULED appointment
+      if (isDoctor && current.status === "SCHEDULED") {
+        return { success: false, msg: "Doctors cannot cancel a scheduled appointment" };
+      }
+    }
+
+    // ✅ No going backwards (e.g. COMPLETED → SCHEDULED)
+    if (status !== "CANCELLED" && newIndex < currentIndex) {
+      return {
+        success: false,
+        msg: `Cannot change status from ${current.status} to ${status}`,
+      };
+    }
+
+    // ✅ Cannot complete a future appointment
+    if (status === "COMPLETED" && new Date(current.appointment_date) > new Date()) {
+      return {
+        success: false,
+        msg: "Cannot complete an appointment that hasn't happened yet",
+      };
+    }
+
     await db.appointment.update({
       where: { id: Number(id) },
-      data: {
-        status,
-        reason,
-      },
+      data: { status, reason },
     });
 
     return {
@@ -68,10 +109,7 @@ export async function addVitalSigns(
 ) {
   try {
     const { userId } = await auth();
-
-    if (!userId) {
-      return { success: false, msg: "Unauthorized" };
-    }
+    if (!userId) return { success: false, msg: "Unauthorized" };
 
     const validatedData = VitalSignsSchema.parse(data);
 
@@ -96,10 +134,7 @@ export async function addVitalSigns(
       },
     });
 
-    return {
-      success: true,
-      msg: "Vital signs added successfully",
-    };
+    return { success: true, msg: "Vital signs added successfully" };
   } catch (error) {
     console.log(error);
     return { success: false, msg: "Internal Server Error" };

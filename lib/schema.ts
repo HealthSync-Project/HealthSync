@@ -191,3 +191,10 @@ export const ServicesSchema = z.object({
   price: z.string({ message: "Service price is required" }),
   description: z.string({ message: "Service description is required" }),
 });
+
+export const RecordPaymentSchema = z.object({
+  payment_id: z.string(),
+  amount_paid: z.coerce.number().min(1, "Amount must be greater than 0"),
+  payment_method: z.enum(["CASH", "CARD"], { message: "Select payment method" }),
+  payment_date: z.string().min(1, "Payment date is required"),
+});

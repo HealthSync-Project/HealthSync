@@ -1,3 +1,6 @@
+// FILE: components/appointment-action.tsx
+// REPLACE existing file — shows only relevant actions based on current status
+
 "use client";
 
 import { AppointmentStatus } from "@/lib/generated/prisma/client";
@@ -11,19 +14,30 @@ import { appointmentAction } from "@/app/actions/appointment";
 interface ActionProps {
   id: string | number;
   status: string;
+  appointmentDate?: Date;
 }
-export const AppointmentAction = ({ id, status }: ActionProps) => {
+
+export const AppointmentAction = ({ id, status, appointmentDate }: ActionProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selected, setSelected] = useState("");
   const [reason, setReason] = useState("");
   const router = useRouter();
+
+  // No actions for completed or cancelled appointments
+  if (status === "COMPLETED" || status === "CANCELLED") return null;
+
+  // Overdue — past date, not completed
+  const isOverdue = appointmentDate && new Date(appointmentDate) < new Date();
+  if (isOverdue) return (
+    <span className="text-xs text-red-400 italic">Overdue — no actions available</span>
+  );
 
   const handleAction = async () => {
     try {
       setIsLoading(true);
       const newReason =
         reason ||
-        `Appointment has ben ${selected.toLowerCase()} on ${new Date()}`;
+        `Appointment has been ${selected.toLowerCase()} on ${new Date().toLocaleDateString()}`;
 
       const resp = await appointmentAction(
         id,
@@ -33,9 +47,10 @@ export const AppointmentAction = ({ id, status }: ActionProps) => {
 
       if (resp.success) {
         toast.success(resp.msg);
-
+        setSelected("");
+        setReason("");
         router.refresh();
-      } else if (resp.error) {
+      } else {
         toast.error(resp.msg);
       }
     } catch (error) {
@@ -48,63 +63,76 @@ export const AppointmentAction = ({ id, status }: ActionProps) => {
 
   return (
     <div>
-      <div className="flex items-center space-x-3">
-        <Button
-          variant="outline"
-          disabled={status === "PENDING" || isLoading || status === "COMPLETED"}
-          className="bg-yellow-200 text-black"
-          onClick={() => setSelected("PENDING")}
-        >
-          Pending
-        </Button>
-        <Button
-          variant="outline"
-          disabled={
-            status === "SCHEDULED" || isLoading || status === "COMPLETED"
-          }
-          className="bg-blue-200 text-black"
-          onClick={() => setSelected("SCHEDULED")}
-        >
-          Approve
-        </Button>
-        <Button
-          variant="outline"
-          disabled={
-            status === "COMPLETED" || isLoading || status === "COMPLETED"
-          }
-          className="bg-emerald-200 text-black"
-          onClick={() => setSelected("COMPLETED")}
-        >
-          Completed
-        </Button>
-        <Button
-          variant="outline"
-          disabled={
-            status === "CANCELLED" || isLoading || status === "COMPLETED"
-          }
-          className="bg-red-200 text-black"
-          onClick={() => setSelected("CANCELLED")}
-        >
-          Cancel
-        </Button>
-      </div>
-      {selected === "CANCELLED" && (
-        <>
-          <Textarea
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* PENDING → can be Approved or Cancelled */}
+        {status === "PENDING" && (
+          <>
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              className="bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200"
+              onClick={() => setSelected("SCHEDULED")}
+            >
+              Approve
+            </Button>
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              className="bg-red-100 text-red-700 border-red-200 hover:bg-red-200"
+              onClick={() => setSelected("CANCELLED")}
+            >
+              Cancel
+            </Button>
+          </>
+        )}
+
+        {/* SCHEDULED → can only be Completed (doctor can't cancel scheduled) */}
+        {status === "SCHEDULED" && (
+          <Button
+            variant="outline"
             disabled={isLoading}
-            className="mt-4"
-            placeholder="Enter reason...."
-            onChange={(e) => setReason(e.target.value)}
-          ></Textarea>
-        </>
+            className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200"
+            onClick={() => setSelected("COMPLETED")}
+          >
+            Mark Completed
+          </Button>
+        )}
+      </div>
+
+      {/* Cancellation reason */}
+      {selected === "CANCELLED" && (
+        <Textarea
+          disabled={isLoading}
+          className="mt-4"
+          placeholder="Enter reason for cancellation..."
+          onChange={(e) => setReason(e.target.value)}
+        />
       )}
 
+      {/* Confirm action */}
       {selected && (
-        <div className="flex items-center justify-between mt-6 bg-red-100 p-4 rounded">
-          <p className="">Are you sure you want to perform this action?</p>
-          <Button disabled={isLoading} type="button" onClick={handleAction}>
-            Yes
-          </Button>
+        <div className="flex items-center justify-between mt-4 bg-gray-50 border rounded-lg p-3">
+          <p className="text-sm text-gray-600">
+            {selected === "SCHEDULED" && "Approve this appointment?"}
+            {selected === "COMPLETED" && "Mark this appointment as completed?"}
+            {selected === "CANCELLED" && "Cancel this appointment?"}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setSelected(""); setReason(""); }}
+            >
+              No
+            </Button>
+            <Button
+              size="sm"
+              disabled={isLoading || (selected === "CANCELLED" && !reason)}
+              onClick={handleAction}
+            >
+              {isLoading ? "Processing..." : "Yes"}
+            </Button>
+          </div>
         </div>
       )}
     </div>

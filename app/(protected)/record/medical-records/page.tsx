@@ -103,7 +103,7 @@ const MedicalRecordsPage = async (props: SearchParamsProps) => {
 
         {/* ACTION */}
         <td className="px-4 py-2">
-          <ViewAction href={`/record/appointments/${item?.appointment_id}`} />
+          <ViewAction href={`/record/appointments/${item?.appointment_id}?cat=charts`} />
         </td>
       </tr>
     );

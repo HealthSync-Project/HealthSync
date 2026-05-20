@@ -1,3 +1,7 @@
+// FILE: components/appointment-status-indicator.tsx
+// REPLACE existing file
+// Shows CANCELLED for overdue PENDING/SCHEDULED appointments (display only, no DB change)
+
 import { cn } from "@/lib/utils";
 import { AppointmentStatus } from "@/lib/generated/prisma/client";
 
@@ -10,17 +14,32 @@ const status_color = {
 
 export const AppointmentStatusIndicator = ({
   status,
+  appointmentDate,
 }: {
   status: AppointmentStatus;
+  appointmentDate?: Date;
 }) => {
+  const isOverdue =
+    appointmentDate &&
+    new Date(appointmentDate) < new Date() &&
+    (status === "PENDING" || status === "SCHEDULED");
+
+  const displayStatus = isOverdue ? "CANCELLED" : status;
+  const displayLabel = isOverdue ? "Overdue" : status.toLowerCase();
+
   return (
-    <p
-      className={cn(
-        "w-fit px-2 py-1 rounded-full capitalize text-xs lg:text-sm",
-        status_color[status]
+    <div className="flex flex-col gap-0.5">
+      <p
+        className={cn(
+          "w-fit px-2 py-1 rounded-full capitalize text-xs lg:text-sm",
+          status_color[displayStatus]
+        )}
+      >
+        {displayLabel}
+      </p>
+      {isOverdue && (
+        <span className="text-xs text-gray-400 pl-1">Not attended</span>
       )}
-    >
-      {status}
-    </p>
+    </div>
   );
 };

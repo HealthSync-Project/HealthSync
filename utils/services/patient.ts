@@ -250,27 +250,45 @@ export async function getAllPatients({
   page,
   limit,
   search,
+  userId,
+  role,
 }: {
   page: number | string;
   limit?: number | string;
   search?: string;
+  userId?: string;
+  role?: string;
 }) {
   try {
     const PAGE_NUMBER = Number(page) <= 0 ? 1 : Number(page);
     const LIMIT = Number(limit) || 10;
-
     const SKIP = (PAGE_NUMBER - 1) * LIMIT;
-
+ 
+    // Role-based access — doctor sees only their own patients
+    let patientIdFilter: string[] | null = null;
+ 
+    if (role === "doctor" && userId) {
+      const doctorAppointments = await db.appointment.findMany({
+        where: { doctor_id: userId },
+        select: { patient_id: true },
+        distinct: ["patient_id"],
+      });
+      patientIdFilter = doctorAppointments.map((a) => a.patient_id);
+    }
+ 
+    const where: any = {
+      ...(patientIdFilter ? { id: { in: patientIdFilter } } : {}),
+      OR: [
+        { first_name: { contains: search, mode: "insensitive" } },
+        { last_name: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+      ],
+    };
+ 
     const [patients, totalRecords] = await Promise.all([
       db.patient.findMany({
-        where: {
-          OR: [
-            { first_name: { contains: search, mode: "insensitive" } },
-            { last_name: { contains: search, mode: "insensitive" } },
-            { phone: { contains: search, mode: "insensitive" } },
-            { email: { contains: search, mode: "insensitive" } },
-          ],
-        },
+        where,
         include: {
           appointments: {
             select: {
@@ -288,11 +306,11 @@ export async function getAllPatients({
         take: LIMIT,
         orderBy: { first_name: "asc" },
       }),
-      db.patient.count(),
+      db.patient.count({ where }),
     ]);
-
+ 
     const totalPages = Math.ceil(totalRecords / LIMIT);
-
+ 
     return {
       success: true,
       data: patients,

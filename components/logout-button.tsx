@@ -18,4 +18,4 @@ export const LogoutButton = () => {
       <span className="hidden lg:block">Logout</span>
     </Button>
   );
-};
+}
