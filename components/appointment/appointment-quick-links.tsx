@@ -1,7 +1,3 @@
-// FILE: components/appointment/appointment-quick-links.tsx
-// REPLACE existing file
-// Removed: Medical History (redundant with medical records), Vital Signs (belongs in medical records)
-
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { checkRole } from "@/utils/roles";

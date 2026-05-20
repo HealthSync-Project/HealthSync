@@ -1,6 +1,3 @@
-// FILE: components/appointment-status-indicator.tsx
-// REPLACE existing file
-// Shows CANCELLED for overdue PENDING/SCHEDULED appointments (display only, no DB change)
 
 import { cn } from "@/lib/utils";
 import { AppointmentStatus } from "@/lib/generated/prisma/client";

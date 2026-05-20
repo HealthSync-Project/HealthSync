@@ -1,6 +1,3 @@
-// FILE: app/api/notifications/all/route.ts
-// Returns full notifications for the notifications page
-
 import { getAdminNotifications, getDoctorNotifications, getPatientNotifications } from "@/utils/services/notifications";
 import { getRole } from "@/utils/roles";
 import { auth } from "@clerk/nextjs/server";

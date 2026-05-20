@@ -1,6 +1,3 @@
-// FILE: utils/services/notifications.ts
-// NEW FILE — generates notifications from existing data, no new table needed
-
 import { db } from "@/lib/prisma";
 
 const ONE_WEEK_AGO = () => {

@@ -1,6 +1,3 @@
-// FILE: app/(protected)/doctor/page.tsx
-// REPLACE existing file
-
 import { AvailableDoctors } from "@/components/available-doctor";
 import { AppointmentChart } from "@/components/charts/appointment-chart";
 import { StatSummary } from "@/components/charts/stat-summary";

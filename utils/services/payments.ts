@@ -1,6 +1,3 @@
-// FILE: utils/services/payments.ts
-// REPLACE your existing file entirely
-
 import { db } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 

@@ -1,5 +1,3 @@
-// FILE: app/(protected)/record/appointments/[id]/page.tsx
-// REPLACE existing file — streamlined consultation page for doctors
 
 import { BillsContainer } from "@/components/appointment/bills-container";
 import { DiagnosisContainer } from "@/components/appointment/diagnosis-container";

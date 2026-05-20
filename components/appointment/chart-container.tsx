@@ -1,5 +1,3 @@
-// FILE: components/appointment/chart-container.tsx
-// REPLACE existing file — removed HeartRateChart (NaN issue + not needed here)
 import { getVitalSignData } from "@/utils/services/medical";
 import BloodPressureChart from "./blood-pressure-chart";
 

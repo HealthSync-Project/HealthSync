@@ -1,6 +1,3 @@
-// FILE: components/sidebar.tsx
-// REPLACE existing file — removed Administer Medications and Audit Logs
-
 import {
   Bell,
   LayoutDashboard,

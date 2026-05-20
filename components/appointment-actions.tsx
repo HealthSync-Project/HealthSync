@@ -1,6 +1,3 @@
-// FILE: components/appointment-actions.tsx
-// REPLACE existing file — removed "View Full Details" button (redundant with View modal)
-
 import { checkRole } from "@/utils/roles";
 import { auth } from "@clerk/nextjs/server";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";

@@ -1,5 +1,4 @@
-// FILE: app/(protected)/record/patients/page.tsx
-// REPLACE existing file
+
 
 import { ActionDialog } from "@/components/action-dialog";
 import { ViewAction } from "@/components/action-options";

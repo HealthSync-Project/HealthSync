@@ -1,6 +1,3 @@
-// FILE: app/actions/appointment.ts
-// REPLACE existing file — adds status flow guards
-
 "use server";
 
 import { VitalSignsFormData } from "@/components/dialogs/add-vital-signs";

@@ -1,6 +1,3 @@
-// FILE: components/appointment/patient-details-card.tsx
-// REPLACE existing file
-
 import { Doctor, Patient } from "@/lib/generated/prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import Image from "next/image";

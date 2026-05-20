@@ -1,7 +1,3 @@
-// FILE: components/appointment/vital-signs.tsx
-// REPLACE existing file
-// Shows only the latest vital signs reading, with a collapsible history below
-
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { calculateBMI } from "@/utils";
 import { format } from "date-fns";

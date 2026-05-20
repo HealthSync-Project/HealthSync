@@ -1,6 +1,3 @@
-// FILE: app/(protected)/record/billing/page.tsx
-// REPLACE your existing billing/page.tsx
-// Only change: ViewAction href fixed from /appointments/... to /record/appointments/...
 
 import { ActionDialog } from "@/components/action-dialog";
 import { Pagination } from "@/components/pagination";

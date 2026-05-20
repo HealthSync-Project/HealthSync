@@ -1,5 +1,3 @@
-// FILE: app/(protected)/record/medical-records/page.tsx
-// REPLACE your existing file entirely — adds role-based filtering + fixed ViewAction href
 
 import { ViewAction } from "@/components/action-options";
 import { Pagination } from "@/components/pagination";

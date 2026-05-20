@@ -1,5 +1,4 @@
-// FILE: app/(protected)/patient/prescription/page.tsx
-// NEW FILE — shows all prescriptions for the logged-in patient
+
 
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";

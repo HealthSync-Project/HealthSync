@@ -1,6 +1,3 @@
-// FILE: app/api/notifications/count/route.ts
-// Returns full notifications list so client can compare with last seen timestamp
-
 import { getAdminNotifications, getDoctorNotifications, getPatientNotifications } from "@/utils/services/notifications";
 import { getRole } from "@/utils/roles";
 import { auth } from "@clerk/nextjs/server";

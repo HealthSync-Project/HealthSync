@@ -1,6 +1,3 @@
-// FILE: components/appointment/diagnosis-container.tsx
-// REPLACE existing file — removed import of deleted medical-history-card.tsx, inlined it
-
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { NoDataFound } from "../no-data-found";

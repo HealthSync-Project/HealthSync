@@ -1,6 +1,3 @@
-// FILE: components/appointment-action.tsx
-// REPLACE existing file — shows only relevant actions based on current status
-
 "use client";
 
 import { AppointmentStatus } from "@/lib/generated/prisma/client";

@@ -5,10 +5,10 @@ import { getDoctors } from "@/utils/services/doctor";
 
 export const AppointmentContainer = async ({
   id,
-  defaultDoctorId, // ✅ ADDED
+  defaultDoctorId, 
 }: {
   id: string;
-  defaultDoctorId?: string; // ✅ ADDED
+  defaultDoctorId?: string; 
 }) => {
   const { data } = await getPatientById(id);
   const { data: doctors } = await getDoctors();

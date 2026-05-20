@@ -1,6 +1,3 @@
-// FILE: components/dialogs/record-payment.tsx
-// NEW FILE — admin records payment against a bill
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";

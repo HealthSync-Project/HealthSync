@@ -1,7 +1,5 @@
 "use client";
 
-// FILE: app/(protected)/notifications/page.tsx
-// Client component so we can access localStorage for read/unread state
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
