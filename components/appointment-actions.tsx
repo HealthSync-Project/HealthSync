@@ -1,3 +1,6 @@
+// FILE: components/appointment-actions.tsx
+// REPLACE existing file — removed "View Full Details" button (redundant with View modal)
+
 import { checkRole } from "@/utils/roles";
 import { auth } from "@clerk/nextjs/server";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -12,6 +15,7 @@ interface ActionsProps {
   doctorId: string;
   appointmentId: number;
   appointmentDate?: Date;
+  appointmentTime?: string;
 }
 
 export const AppointmentActionOptions = async ({
@@ -21,12 +25,32 @@ export const AppointmentActionOptions = async ({
   status,
   appointmentId,
   appointmentDate,
+  appointmentTime,
 }: ActionsProps) => {
   const user = await auth();
   const isAdmin = await checkRole("admin");
   const isPatient = await checkRole("patient");
-  const isOverdue = appointmentDate && new Date(appointmentDate) < new Date() &&
-    (status === "PENDING" || status === "SCHEDULED");
+
+  const isOverdue = (() => {
+    if (!appointmentDate) return false;
+    if (status !== "PENDING" && status !== "SCHEDULED") return false;
+
+    const now = new Date();
+    const apptDate = new Date(appointmentDate);
+
+    if (appointmentTime) {
+      const [timePart, meridiem] = appointmentTime.trim().split(" ");
+      const [hoursRaw, minutes] = timePart.split(":").map(Number);
+      let hours = hoursRaw;
+      if (meridiem?.toUpperCase() === "PM" && hours !== 12) hours += 12;
+      if (meridiem?.toUpperCase() === "AM" && hours === 12) hours = 0;
+      apptDate.setHours(hours, minutes, 0, 0);
+    } else {
+      apptDate.setHours(23, 59, 59, 999);
+    }
+
+    return apptDate < now;
+  })();
 
   // No 3-dot menu for completed or overdue appointments
   if (status === "COMPLETED" || status === "CANCELLED" || isOverdue) return null;

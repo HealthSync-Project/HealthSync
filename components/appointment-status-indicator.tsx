@@ -1,3 +1,6 @@
+// FILE: components/appointment-status-indicator.tsx
+// REPLACE existing file
+// Shows CANCELLED for overdue PENDING/SCHEDULED appointments (display only, no DB change)
 
 import { cn } from "@/lib/utils";
 import { AppointmentStatus } from "@/lib/generated/prisma/client";
@@ -12,14 +15,34 @@ const status_color = {
 export const AppointmentStatusIndicator = ({
   status,
   appointmentDate,
+  appointmentTime,
 }: {
   status: AppointmentStatus;
   appointmentDate?: Date;
+  appointmentTime?: string; // e.g. "11:30 AM"
 }) => {
-  const isOverdue =
-    appointmentDate &&
-    new Date(appointmentDate) < new Date() &&
-    (status === "PENDING" || status === "SCHEDULED");
+  const isOverdue = (() => {
+    if (!appointmentDate) return false;
+    if (status !== "PENDING" && status !== "SCHEDULED") return false;
+
+    const now = new Date();
+    const apptDate = new Date(appointmentDate);
+
+    // Build a full datetime by combining the date with the time string
+    if (appointmentTime) {
+      const [timePart, meridiem] = appointmentTime.trim().split(" ");
+      const [hoursRaw, minutes] = timePart.split(":").map(Number);
+      let hours = hoursRaw;
+      if (meridiem?.toUpperCase() === "PM" && hours !== 12) hours += 12;
+      if (meridiem?.toUpperCase() === "AM" && hours === 12) hours = 0;
+      apptDate.setHours(hours, minutes, 0, 0);
+    } else {
+      // No time given — only mark overdue if the date itself is past (not today)
+      apptDate.setHours(23, 59, 59, 999);
+    }
+
+    return apptDate < now;
+  })();
 
   const displayStatus = isOverdue ? "CANCELLED" : status;
   const displayLabel = isOverdue ? "Overdue" : status.toLowerCase();
