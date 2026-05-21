@@ -23,8 +23,16 @@ export const AppointmentAction = ({ id, status, appointmentDate }: ActionProps) 
   // No actions for completed or cancelled appointments
   if (status === "COMPLETED" || status === "CANCELLED") return null;
 
-  // Overdue — past date, not completed
-  const isOverdue = appointmentDate && new Date(appointmentDate) < new Date();
+  // Overdue — past date only (not today), not completed
+  // Strip time so today's appointments are never marked overdue
+  const isOverdue = (() => {
+    if (!appointmentDate) return false;
+    const appt = new Date(appointmentDate);
+    const today = new Date();
+    appt.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    return appt < today;
+  })();
   if (isOverdue) return (
     <span className="text-xs text-red-400 italic">Overdue — no actions available</span>
   );
