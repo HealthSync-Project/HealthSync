@@ -62,13 +62,20 @@ export const BillsContainer = async ({ id }: { id: string }) => {
           include: {
             service: { select: { service_name: true, id: true } },
           },
-
           orderBy: { created_at: "asc" },
         },
       },
     }),
     db.services.findMany(),
   ]);
+
+  const isAdmin = await checkRole("ADMIN");
+  const isDoctor = await checkRole("DOCTOR");
+  const canDelete = isAdmin || isDoctor;
+
+  const visibleColumns = canDelete
+    ? columns
+    : columns.filter((col) => col.key !== "action");
 
   let totalBills = 0;
 
@@ -103,11 +110,13 @@ export const BillsContainer = async ({ id }: { id: string }) => {
         <td>{item?.total_cost.toFixed(2)}</td>
 
         <td className="hidden xl:table-cell">
-          <ActionDialog
-            type="delete"
-            id={item?.id.toString()}
-            deleteType="bill"
-          />
+          {canDelete && (
+            <ActionDialog
+              type="delete"
+              id={item?.id.toString()}
+              deleteType="bill"
+            />
+          )}
         </td>
       </tr>
     );
@@ -136,7 +145,7 @@ export const BillsContainer = async ({ id }: { id: string }) => {
         )}
       </div>
 
-      <Table columns={columns} renderRow={renderRow} data={billData!} />
+      <Table columns={visibleColumns} renderRow={renderRow} data={billData!} />
 
       <Separator />
 

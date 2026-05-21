@@ -37,14 +37,49 @@ import {
 import { toast } from "sonner";
 import { createNewAppointment } from "@/app/actions/appointment";
 
-const TYPES = [
+const COMMON_TYPES = [
   { label: "General Consultation", value: "General Consultation" },
-  { label: "General Check up", value: "General Check Up" },
+  { label: "General Check Up", value: "General Check Up" },
+  { label: "Lab Test", value: "Lab Test" },
+  { label: "Follow-up Visit", value: "Follow-up Visit" },
+  { label: "Emergency", value: "Emergency" },
+  { label: "Vaccination", value: "Vaccination" },
+  { label: "Physical Examination", value: "Physical Examination" },
+  { label: "Mental Health Consultation", value: "Mental Health Consultation" },
+];
+
+const FEMALE_ONLY_TYPES = [
   { label: "Antenatal", value: "Antenatal" },
   { label: "Maternity", value: "Maternity" },
-  { label: "Lab Test", value: "Lab Test" },
-  { label: "ANT", value: "ANT" },
+  { label: "Gynecology Consultation", value: "Gynecology Consultation" },
+  { label: "Prenatal Care", value: "Prenatal Care" },
 ];
+
+const FEMALE_ONLY_SPECIALIZATIONS = [
+  "obstetrician",
+  "gynecologist",
+  "obstetrician/gynecologist",
+  "gynaecologist",
+  "obstetrics",
+];
+
+const getAppointmentTypes = (gender: string) =>
+  gender?.toLowerCase() === "female"
+    ? [...COMMON_TYPES, ...FEMALE_ONLY_TYPES]
+    : COMMON_TYPES;
+
+const getFilteredDoctors = (
+  doctors: DoctorWithWorkingDays[],
+  gender: string
+) => {
+  if (gender?.toLowerCase() === "female") return doctors;
+  return doctors.filter(
+    (d) =>
+      !FEMALE_ONLY_SPECIALIZATIONS.some((s) =>
+        d.specialization?.toLowerCase().includes(s)
+      )
+  );
+};
 
 // CHANGE 2: Day mapping and extended Doctor type
 const DAY_MAP: Record<string, number> = {
@@ -69,8 +104,11 @@ export const BookAppointment = ({
   const [physicians, setPhysicians] = useState<DoctorWithWorkingDays[]>(doctors); // CHANGE 4: updated type
 
   const patientName = `${data?.first_name} ${data?.last_name}`;
+  const appointmentTypes = getAppointmentTypes(data?.gender);
+  const filteredDoctors = getFilteredDoctors(doctors, data?.gender);
 
   useEffect(() => {
+    setPhysicians(filteredDoctors);
     if (defaultDoctorId) {
       setOpen(true);
       form.setValue("doctor_id", defaultDoctorId);
@@ -179,7 +217,7 @@ export const BookAppointment = ({
 
                 <CustomInput
                   type="select"
-                  selectList={TYPES}
+                  selectList={appointmentTypes}
                   control={form.control}
                   name="type"
                   label="Appointment Type"

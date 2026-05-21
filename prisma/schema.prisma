@@ -83,6 +83,7 @@ model Patient {
   img                      String?
   colorCode                String?
 
+
   appointments             Appointment[]
   medical                  MedicalRecords[]
   payments                 Payment[]

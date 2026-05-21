@@ -17,20 +17,21 @@ export const Navbar = () => {
         const res = await fetch("/api/notifications/count");
         if (!res.ok) return;
         const { notifications } = await res.json();
-        
+
         const lastSeen = localStorage.getItem("notifications_last_seen");
         const lastSeenDate = lastSeen ? new Date(lastSeen) : new Date(0);
-        
-        // Count notifications newer than last seen
+
         const unread = notifications.filter(
           (n: { createdAt: string }) => new Date(n.createdAt) > lastSeenDate
         ).length;
-        
+
         setUnreadCount(unread);
       } catch {}
     };
-    fetchCount();
-  }, [pathname]);
+
+    const timer = setTimeout(fetchCount, 300);
+    return () => clearTimeout(timer);
+  }, [pathname, userId]);
 
   // Mark all as read when visiting notifications page
   useEffect(() => {
