@@ -54,7 +54,11 @@ export const AppointmentAction = ({ id, status, appointmentDate }: ActionProps) 
         toast.success(resp.msg);
         setSelected("");
         setReason("");
-        router.refresh();
+        if (selected === "COMPLETED") {
+          router.push(`/record/appointments/${id}`);
+        } else {
+          router.refresh();
+        }
       } else {
         toast.error(resp.msg);
       }
