@@ -101,7 +101,7 @@ export const VitalSigns = async ({ id, patientId, doctorId }: VitalSignsProps) =
                   label="Heart Rate"
                   value={`${latest.heartRate} bpm`}
                   icon={Heart}
-                  color="text-rose-500"
+                  color="text-gray-700"
                 />
                 <VitalItem
                   label="BMI"

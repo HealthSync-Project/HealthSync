@@ -125,7 +125,7 @@ export const AddDiagnosis = ({
                   type="textarea"
                   control={form.control}
                   name="prescribed_medications"
-                  placeholder="Enter principles here ..."
+                  placeholder="Enter prescriptions here ..."
                   label="Prescriptions for this patient"
                 />
               </div>
